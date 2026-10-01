@@ -1,8 +1,8 @@
 import ReactDOM from "react-dom/client";
 import { useEffect, useRef, useState } from "react";
-import "./App.css";
-import PlayerCard, { PlayerChip } from "./components/PlayerCard";
-import Radar from "./components/Radar";
+import "./app.css";
+import PlayerCard, { PlayerChip } from "./components/playercard";
+import Radar from "./components/radar";
 import SettingsButton from "./components/settings";
 import MaskedIcon from "./components/maskedicon";
 import IdentityPicker from "./components/identitypicker";
