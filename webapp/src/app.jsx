@@ -1,4 +1,3 @@
-```jsx
 import ReactDOM from "react-dom/client";
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
@@ -775,4 +774,3 @@ const App = () => {
 };
 
 export default App;
-```
