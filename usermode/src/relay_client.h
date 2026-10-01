@@ -1,4 +1,3 @@
-```cpp
 #pragma once
 
 #include <windows.h>
@@ -314,4 +313,3 @@ public:
         }
     }
 };
-```

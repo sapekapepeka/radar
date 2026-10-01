@@ -1,4 +1,3 @@
-```cpp
 #include "pch.hpp"
 #include "relay_client.h"
 
@@ -79,4 +78,3 @@ bool main()
 
     return true;
 }
-```
