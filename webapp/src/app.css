@@ -4,7 +4,7 @@
 
 @font-face {
   font-family: "TASAOrbiter";
-  src: url("./assets/typefaces/TASAOrbiterVF.woff2");
+  src: url("/assets/typefaces/TASAOrbiterVF.woff2");
 }
 
 :root {
