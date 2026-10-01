@@ -1,0 +1,19 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Viewer</title>
+<pre id="out">conectando...</pre>
+<script>
+// Troque pela URL do seu relay no Render depois do deploy
+const RELAY = "wss://SEU-RELAY.onrender.com";
+const game = new URLSearchParams(location.search).get("game");
+const out = document.getElementById("out");
+
+function connect() {
+  const ws = new WebSocket(`${RELAY}/?role=viewer&game=${encodeURIComponent(game)}`);
+  ws.onopen = () => (out.textContent = "conectado, aguardando dados...");
+  ws.onmessage = (e) => (out.textContent = e.data); // aqui entra sua renderização
+  ws.onclose = () => setTimeout(connect, 2000); // reconecta (cobre o cold start)
+}
+connect();
+</script>
