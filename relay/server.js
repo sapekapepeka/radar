@@ -1,42 +1,62 @@
 const http = require("http");
+const crypto = require("crypto");
 const { WebSocketServer } = require("ws");
 
 const PORT = process.env.PORT || 8080;
-const HOST_KEY = process.env.HOST_KEY; // segredo só do host
+// Opcional: se definido no Render, o host precisa enviar ?key=HOST_KEY
+const HOST_KEY = process.env.HOST_KEY;
 
 const server = http.createServer((req, res) => {
   res.writeHead(200);
   res.end("ok"); // health check do Render
 });
 const wss = new WebSocketServer({ server });
-const rooms = new Map(); // game -> { host, viewers:Set }
+const rooms = new Map(); // gameId -> { host, viewers:Set }
 
-function getRoom(game) {
-  let room = rooms.get(game);
-  if (!room) rooms.set(game, (room = { host: null, viewers: new Set() }));
-  return room;
-}
+const sendJson = (ws, obj) => {
+  if (ws.readyState === 1) ws.send(JSON.stringify(obj));
+};
 
 wss.on("connection", (ws, req) => {
   const url = new URL(req.url, "http://x");
-  const game = url.searchParams.get("game");
   const role = url.searchParams.get("role");
-  if (!game || !/^[A-Za-z0-9]{4,16}$/.test(game)) return ws.close();
 
-  const room = getRoom(game);
   if (role === "host") {
-    if (!HOST_KEY || url.searchParams.get("key") !== HOST_KEY) return ws.close();
-    room.host = ws;
+    if (HOST_KEY && url.searchParams.get("key") !== HOST_KEY) return ws.close();
+
+    // O relay gera o Game ID e devolve para o usermode
+    const gameId = crypto.randomUUID();
+    const room = { host: ws, viewers: new Set() };
+    rooms.set(gameId, room);
+    sendJson(ws, { type: "game_created", gameId });
+
     ws.on("message", (data, isBinary) => {
       for (const v of room.viewers) {
         if (v.readyState === 1) v.send(data, { binary: isBinary });
       }
     });
     ws.on("close", () => {
-      room.host = null;
+      rooms.delete(gameId);
+      for (const v of room.viewers) {
+        sendJson(v, { type: "game_ended", gameId });
+        v.close();
+      }
     });
   } else {
+    const gameId = url.searchParams.get("game");
+    if (!gameId) {
+      sendJson(ws, { type: "error", error: "game_id_required" });
+      return ws.close();
+    }
+
+    const room = rooms.get(gameId);
+    if (!room) {
+      sendJson(ws, { type: "error", error: "game_not_found" });
+      return ws.close();
+    }
+
     room.viewers.add(ws);
+    sendJson(ws, { type: "joined_game", gameId });
     ws.on("close", () => room.viewers.delete(ws));
   }
 
